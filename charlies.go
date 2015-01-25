@@ -13,6 +13,7 @@ import (
     "time"
     "reflect"
     "bytes"
+    "io/ioutil"
 )
 
 const Version = "1.0.0"
@@ -80,7 +81,16 @@ func (c *RandomOrgClient) GetRandomBits(bitSize int, count int, txId int) error 
 	req.Header.Set("Content-Type", "application/json")
 
 	resp, err := client.Do(req)
-    log.Println(resp)
+    if err != nil {
+        return err
+    }
+
+    defer resp.Body.Close()
+
+    log.Println("response Status:", resp.Status)
+    log.Println("response Headers:", resp.Header)
+    body, _ := ioutil.ReadAll(resp.Body)
+    log.Println("response Body:", string(body))
 	return err
 }
 
