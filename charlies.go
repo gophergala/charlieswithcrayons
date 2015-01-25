@@ -115,7 +115,14 @@ func (c *RandomOrgClient) GetRandomBits(bitSize int, count int, txId int) error 
 	log.Println("response Headers:", resp.Header)
 	body, _ := ioutil.ReadAll(resp.Body)
 	log.Println("response Body:", string(body))
-	return err
+
+    var blob BlobResponse
+    if err = json.Unmarshal(body, &blob); err != nil {
+       log.Println("\terror:", err)
+       return err
+    }
+    log.Println(blob.Id)
+	return nil
 }
 
 // @TODO
