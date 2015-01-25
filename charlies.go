@@ -7,13 +7,12 @@
 package charlieswithcrayons
 
 import (
+	"bytes"
 	"encoding/json"
+	"io/ioutil"
 	"log"
 	"net/http"
-    "time"
-    "reflect"
-    "bytes"
-    "io/ioutil"
+	"time"
 )
 
 const Version = "1.0.0"
@@ -51,6 +50,32 @@ type BlobArguments struct {
 	Id         int `json:"id"`
 }
 
+type Blob struct {
+	Data           []string `json:"data"`
+	CompletionTime string   `json:"completionTime"`
+}
+
+type BlobWrapper struct {
+	Blob          `json:"random"`
+	BitsUsed      int `json:"bitsUsed"`
+	BitsLeft      int `json:"bitsLeft"`
+	RequestsLeft  int `json:"requestsLeft"`
+	AdvisoryDelay int `json:"advisoryDelay"`
+}
+
+type BlobError struct {
+	Code    int      `json:"code"`
+	Message string   `json:"message"`
+	Data    []string `json:"data"`
+}
+
+type BlobResponse struct {
+	JsonRpc     string `json:"jsonrpc"`
+	BlobWrapper `json:"result"`
+	BlobError   `json:"error"`
+	Id          int `json:"id"`
+}
+
 func (c *RandomOrgClient) newBlobArguments(method string, bitSize int, txId int) *BlobArguments {
 	retval := new(BlobArguments)
 	retval.JsonRpc = "2.0"
@@ -68,32 +93,32 @@ func (c *RandomOrgClient) GetRandomBits(bitSize int, count int, txId int) error 
 	log.Println("invoke generateBlobs")
 	blobArguments := c.newBlobArguments(methodBlob, bitSize, txId)
 	client := http.Client{
-		Timeout: time.Duration(2 * time.Second),
+		Timeout: time.Duration(5 * time.Second),
 	}
 
 	postBody, err := json.Marshal(blobArguments)
-    if err != nil {
+	if err != nil {
 		panic(err)
 	}
-    log.Println(reflect.TypeOf(postBody))
 
 	req, err := http.NewRequest("POST", c.url, bytes.NewBuffer(postBody))
 	req.Header.Set("Content-Type", "application/json")
 
 	resp, err := client.Do(req)
-    if err != nil {
-        return err
-    }
+	if err != nil {
+		return err
+	}
 
-    defer resp.Body.Close()
+	defer resp.Body.Close()
 
-    log.Println("response Status:", resp.Status)
-    log.Println("response Headers:", resp.Header)
-    body, _ := ioutil.ReadAll(resp.Body)
-    log.Println("response Body:", string(body))
+	log.Println("response Status:", resp.Status)
+	log.Println("response Headers:", resp.Header)
+	body, _ := ioutil.ReadAll(resp.Body)
+	log.Println("response Body:", string(body))
 	return err
 }
 
+// @TODO
 func (c *RandomOrgClient) GetSignedRandom(bitSize int, count int) error {
 	log.Println("invoke generateSignedBlobs")
 	return nil
