@@ -5,6 +5,10 @@
 // Package charlieswithcrayons provides access to random.org's JSON RPC api
 package charlieswithcrayons
 
+import (
+	"log"
+)
+
 const Version = "1.0.0"
 const StdUrl = "https://api.random.org/json-rpc/1/invoke"
 
@@ -23,4 +27,14 @@ func New(args Arguments) *RandomOrgClient {
 	client.apiKey = args.ApiKey
 	client.url = args.Url
 	return client
+}
+
+func (c *RandomOrgClient) GetRandomBits(bitSize int, count int) error {
+	log.Println("invoke generateBlobs")
+	return nil
+}
+
+func (c *RandomOrgClient) GetSignedRandom(bitSize int, count int) error {
+	log.Println("invoke generateSignedBlobs")
+	return nil
 }
