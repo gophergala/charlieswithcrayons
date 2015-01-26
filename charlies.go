@@ -13,12 +13,14 @@ import (
 	"log"
 	"net/http"
 	"time"
+    "errors"
 )
 
 const Version = "1.0.0"
 const StdUrl = "https://api.random.org/json-rpc/1/invoke"
 const methodBlob = "generateBlobs"
 const methodBlobSigned = "generateSignedBlobs"
+
 
 type Arguments struct {
 	ApiKey string
@@ -89,7 +91,7 @@ func (c *RandomOrgClient) newBlobArguments(method string, bitSize int, txId int)
 
 // You must have a valid Api key to invoke this method.
 // Argument `txId` can be used to differentiate calls.
-func (c *RandomOrgClient) GetRandomBits(bitSize int, count int, txId int) error {
+func (c *RandomOrgClient) GetRandomBits(bitSize int, count int, txId int) ([]string, error) {
 	log.Println("invoke generateBlobs")
 	blobArguments := c.newBlobArguments(methodBlob, bitSize, txId)
 	client := http.Client{
@@ -106,7 +108,7 @@ func (c *RandomOrgClient) GetRandomBits(bitSize int, count int, txId int) error 
 
 	resp, err := client.Do(req)
 	if err != nil {
-		return err
+		return nil, err
 	}
 
 	defer resp.Body.Close()
@@ -119,10 +121,13 @@ func (c *RandomOrgClient) GetRandomBits(bitSize int, count int, txId int) error 
     var blob BlobResponse
     if err = json.Unmarshal(body, &blob); err != nil {
        log.Println("\terror:", err)
-       return err
+       return nil, err
     }
-    log.Println(blob.Id)
-	return nil
+    if len(blob.BlobError.Message) > 0 {
+       return nil, errors.New(blob.BlobError.Message)
+    } else {
+       return blob.BlobWrapper.Blob.Data, nil
+    }
 }
 
 // @TODO
